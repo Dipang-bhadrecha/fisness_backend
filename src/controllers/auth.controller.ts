@@ -2,21 +2,22 @@ import { FastifyRequest, FastifyReply } from 'fastify'
 import { AuthService } from '../services/auth.service'
 import { successResponse } from '../utils/response'
 
-interface RequestOTPBody { email: string; name: string }
-interface VerifyOTPBody  { email: string; code: string  }
+interface RequestOTPBody { phone: string }
+interface VerifyOTPBody  { phone: string; code: string }
 
 export async function requestOTP(
   request: FastifyRequest<{ Body: RequestOTPBody }>,
   reply: FastifyReply
 ) {
-  const { email, name } = request.body
+  const { phone } = request.body
+
   const result = await AuthService.requestOTP(
     request.server.prisma,
-    email,
-    name
+    phone
   )
+
   return reply.status(200).send(
-    successResponse(result, 'OTP sent to your email')
+    successResponse(result, 'OTP sent to your phone')
   )
 }
 
@@ -24,27 +25,27 @@ export async function verifyOTP(
   request: FastifyRequest<{ Body: VerifyOTPBody }>,
   reply: FastifyReply
 ) {
-  const { email, code } = request.body
+  const { phone, code } = request.body
 
   const user = await AuthService.verifyOTP(
     request.server.prisma,
-    email,
+    phone,
     code
   )
 
-  // Sign JWT with user info
   const token = await reply.jwtSign({
     userId: user.id,
-    email:  user.email,
+    phone:  user.phone,
   })
 
   return reply.status(200).send(
     successResponse({
       token,
       user: {
-        id:    user.id,
-        email: user.email,
-        name:  user.name,
+        id:        user.id,
+        phone:     user.phone,
+        name:      user.name,
+        isNewUser: !user.name, // if no name set yet — new user
       },
     }, 'Login successful')
   )

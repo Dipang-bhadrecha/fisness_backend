@@ -8,7 +8,7 @@ import jwtPlugin from './plugins/jwt.plugin'
 import { authRoutes } from './routes/auth.routes'
 import { errorResponse } from './utils/response'
 import { AppError } from './utils/errors'
-import { verifyEmailConnection } from './services/email.service'
+import { verifySmsService } from './services/sms.service'
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -36,8 +36,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(prismaPlugin)
   await fastify.register(jwtPlugin)
 
-  // ── Email check ───────────────────────────────────────────────
-  await verifyEmailConnection()
+  await verifySmsService()
 
   // ── Global error handler ──────────────────────────────────────
 fastify.setErrorHandler(async (error: any, request, reply) => {

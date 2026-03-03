@@ -11,44 +11,30 @@ datasource db {
 // USER & AUTH
 // ═══════════════════════════════════════════════════════════════════
 
-// One real person. One account. One email.
 // They switch contexts inside the app — no re-login needed.
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  name        String
-  phone       String?  @unique  // for WhatsApp bill delivery
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // What this person owns
-  ownedBoats          Boat[]              @relation("BoatOwner")
-  ownedCompanies      Company[]           @relation("CompanyOwner")
-
-  // What this person manages (for others)
-  boatAssignments     BoatAssignment[]
-  companyMemberships  CompanyMembership[]
-
-  // Auth
-  otps                OTP[]
-
-  // Sessions this person created
-  sessions            Session[]
-
-  // Invitations this person sent as owner
-  sentInvitations     Invitation[]
+  ownedBoats         Boat[]              @relation("BoatOwner")
+  ownedCompanies     Company[]           @relation("CompanyOwner")
+  boatAssignments    BoatAssignment[]
+  companyMemberships CompanyMembership[]
+  otps               OTP[]
+  sessions           Session[]
+  sentInvitations    Invitation[]
 
   @@map("users")
 }
 
-// Email OTP login. No passwords.
-// Expires 10 min. Single use only.
-
 model OTP {
   id        String   @id @default(uuid())
-  email     String
+  phone     String
   code      String
   userId    String?
   isUsed    Boolean  @default(false)
