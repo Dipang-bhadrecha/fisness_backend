@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: matsyakosh-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: matsyakosh_user
+      POSTGRES_PASSWORD: Matsya@369
+      POSTGRES_DB: matsyakosh_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - matsyakosh_data:/var/lib/postgresql/data
+
+volumes:
+  matsyakosh_data:
