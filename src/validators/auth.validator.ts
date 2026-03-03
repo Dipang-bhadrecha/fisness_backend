@@ -1,10 +1,13 @@
 export const requestOTPSchema = {
   body: {
     type: 'object',
-    required: ['email', 'name'],
+    required: ['phone'],
     properties: {
-      email: { type: 'string', format: 'email' },
-      name:  { type: 'string', minLength: 1 },
+      phone: {
+        type: 'string',
+        pattern: '^[6-9][0-9]{9}$',  // Indian 10 digit validation
+        description: 'Indian mobile number — 10 digits starting with 6-9'
+      },
     },
     additionalProperties: false,
   },
@@ -13,10 +16,17 @@ export const requestOTPSchema = {
 export const verifyOTPSchema = {
   body: {
     type: 'object',
-    required: ['email', 'code'],
+    required: ['phone', 'code'],
     properties: {
-      email: { type: 'string', format: 'email' },
-      code:  { type: 'string', minLength: 6, maxLength: 6 },
+      phone: {
+        type: 'string',
+        pattern: '^[6-9][0-9]{9}$',
+      },
+      code: {
+        type: 'string',
+        minLength: 6,
+        maxLength: 6,
+      },
     },
     additionalProperties: false,
   },
