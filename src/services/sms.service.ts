@@ -1,41 +1,33 @@
-import axios from 'axios'
+import twilio from 'twilio'
 
-export async function sendOTPSms(
-  phone: string,
-  code: string
-): Promise<void> {
-  try {
-    const response = await axios.post(
-      'https://www.fast2sms.com/dev/bulkV2',
-      {
-        route: 'q',
-        message: `${code} is your MatsyaKosh login OTP. Valid for 10 minutes. Do not share with anyone.`,
-        language: 'english',
-        numbers: phone,
-      },
-      {
-        headers: {
-          authorization: process.env.FAST2SMS_API_KEY,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+const client = () => twilio(
+  process.env.TWILIO_ACCOUNT_SID!,
+  process.env.TWILIO_AUTH_TOKEN!
+)
 
-    if (!response.data.return) {
-      throw new Error(`Fast2SMS error: ${JSON.stringify(response.data)}`)
-    }
+const SID = process.env.TWILIO_VERIFY_SERVICE_SID!
 
-    console.log(`📱 OTP sent to +91${phone}`)
+// Called in requestOTP — sends OTP via Twilio
+export async function sendOTPSms(phone: string): Promise<void> {
+  const to = phone.startsWith('+') ? phone : `+91${phone}`
+  await client().verify.v2.services(SID).verifications.create({
+    to,
+    channel: 'sms',
+  })
+  console.log(`📱 OTP sent via Twilio to ${to}`)
+}
 
-  } catch (error: any) {
-    console.error('SMS send failed:', error?.response?.data ?? error.message)
-    throw new Error('Failed to send OTP SMS')
-  }
+// Called in verifyOTP — checks code with Twilio
+export async function verifyOTPSms(phone: string, code: string): Promise<boolean> {
+  const to = phone.startsWith('+') ? phone : `+91${phone}`
+  const result = await client().verify.v2.services(SID).verificationChecks.create({ to, code })
+  return result.status === 'approved'
 }
 
 export async function verifySmsService(): Promise<void> {
-  if (!process.env.FAST2SMS_API_KEY) {
-    throw new Error('FAST2SMS_API_KEY is not set in .env')
+  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID } = process.env
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_VERIFY_SERVICE_SID) {
+    throw new Error('Missing Twilio env vars')
   }
-  console.log('📱 SMS service ready')
+  console.log('📱 Twilio Verify SMS service ready')
 }
