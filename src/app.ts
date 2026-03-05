@@ -5,25 +5,37 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import prismaPlugin from './plugins/prisma.plugin'
 import jwtPlugin from './plugins/jwt.plugin'
-import { authRoutes } from './routes/auth.routes'
-import { errorResponse } from './utils/response'
-import { AppError } from './utils/errors'
+import { authRoutes }       from './routes/auth.routes'
+import { companyRoutes }    from './routes/company.routes'
+import { boatRoutes }       from './routes/boat.routes'
+import { sessionRoutes }    from './routes/session.routes'
+import { billRoutes }       from './routes/bill.routes'
+import { invitationRoutes } from './routes/invitation.routes'
+import { errorResponse }    from './utils/response'
+import { AppError }         from './utils/errors'
 import { verifySmsService } from './services/sms.service'
 
 export async function buildApp(): Promise<FastifyInstance> {
+  const isDev = process.env.NODE_ENV === 'development'
+
   const fastify = Fastify({
-    logger: {
-      level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
-      transport: process.env.NODE_ENV === 'development'
-        ? { target: 'pino-pretty', options: { colorize: true } }
-        : undefined,
-    },
+    logger: isDev
+      ? {
+          level: 'debug',
+          transport: {
+            target: 'pino-pretty',
+            options: { colorize: true },
+          },
+        }
+      : {
+          level: 'info',
+        },
   })
 
-  // ── Security plugins ──────────────────────────────────────────
+  // ── Security plugins ────────────────────────────────────────────────────────
   await fastify.register(helmet)
   await fastify.register(cors, {
-    origin: process.env.NODE_ENV === 'development' ? '*' : false,
+    origin: isDev ? '*' : false,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   })
   await fastify.register(rateLimit, {
@@ -32,14 +44,14 @@ export async function buildApp(): Promise<FastifyInstance> {
     timeWindow: '1 minute',
   })
 
-  // ── App plugins ───────────────────────────────────────────────
+  // ── App plugins ─────────────────────────────────────────────────────────────
   await fastify.register(prismaPlugin)
   await fastify.register(jwtPlugin)
 
   await verifySmsService()
 
-  // ── Global error handler ──────────────────────────────────────
-fastify.setErrorHandler(async (error: any, request, reply) => {
+  // ── Global error handler ────────────────────────────────────────────────────
+  fastify.setErrorHandler(async (error: any, request, reply) => {
     request.log.error({ error, url: request.url }, 'Request error')
 
     if (error instanceof AppError) {
@@ -74,15 +86,20 @@ fastify.setErrorHandler(async (error: any, request, reply) => {
     )
   })
 
-  // ── Health check ──────────────────────────────────────────────
+  // ── Health check ────────────────────────────────────────────────────────────
   fastify.get('/health', async () => ({
     status: 'ok',
     service: 'matsyakosh-api',
     timestamp: new Date().toISOString(),
   }))
 
-  // ── Routes ────────────────────────────────────────────────────
-  fastify.register(authRoutes, { prefix: '/api/v1/auth' })
+  // ── Routes ──────────────────────────────────────────────────────────────────
+  fastify.register(authRoutes,       { prefix: '/api/v1/auth' })
+  fastify.register(companyRoutes,    { prefix: '/api/v1/companies' })
+  fastify.register(boatRoutes,       { prefix: '/api/v1/boats' })
+  fastify.register(sessionRoutes,    { prefix: '/api/v1/sessions' })
+  fastify.register(billRoutes,       { prefix: '/api/v1/bills' })
+  fastify.register(invitationRoutes, { prefix: '/api/v1/invitations' })
 
   return fastify
 }
