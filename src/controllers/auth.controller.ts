@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { AuthService } from '../services/auth.service'
+import { AuthService, WorkspaceSetupPayload } from '../services/auth.service'
 import { successResponse } from '../utils/response'
 
 interface RequestOTPBody { phone: string }
@@ -60,4 +60,16 @@ export async function getMe(
     request.user.userId
   )
   return reply.status(200).send(successResponse(user))
+}
+
+export async function setup(
+  request: FastifyRequest<{ Body: WorkspaceSetupPayload }>,
+  reply: FastifyReply
+) {
+  const workspaces = await AuthService.setup(
+    request.server.prisma,
+    request.user.userId,
+    request.body
+  )
+  return reply.status(200).send(successResponse({ workspaces }, 'Setup complete'))
 }

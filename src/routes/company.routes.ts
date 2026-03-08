@@ -19,8 +19,3 @@ export async function companyRoutes(fastify: FastifyInstance) {
   fastify.get('/:companyId/registered-boats',   auth, getRegisteredBoats)
 }
 
-
-
-// POST/api/v1/companies      Create company
-// GET/api/v1/companies       My companies
-// GET/api/v1/companies/:id/  registered-boatsBoats at company
