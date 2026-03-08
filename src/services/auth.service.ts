@@ -1,6 +1,24 @@
 import { PrismaClient } from '@prisma/client'
 import { sendOTPSms, verifyOTPSms } from './sms.service'
+import { CompanyService } from './company.service'
 import { ValidationError, NotFoundError } from '../utils/errors'
+
+export interface WorkspaceSetupPayload {
+  primaryRole: 'owner' | 'manager' | 'both'
+  ownerType?: 'company' | 'personal' | 'both'
+  companyName?: string
+  firstBoatName?: string
+  boatRegistration?: string
+  ownerPhone?: string
+}
+
+export interface WorkspaceResult {
+  id: string
+  type: 'company' | 'personal' | 'manager_access'
+  name: string
+  role: 'owner' | 'manager'
+  permissions: string[]
+}
 
 function generateOTPCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
@@ -28,7 +46,7 @@ static async requestOTP(prisma: PrismaClient, phone: string) {
 // verifyOTP — replace DB lookup with Twilio check
 static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
   const approved = await verifyOTPSms(phone, code)
-  if (!approved) throw new ValidationError('Invalid or expired OTP code')
+  if (!approved) throw new ValidationError('Invalid or expired OTP code. Please check the code or request a new one.')
 
   const user = await prisma.user.findUnique({ where: { phone } })
   if (!user) throw new NotFoundError('User')
@@ -63,5 +81,39 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
 
     if (!user) throw new NotFoundError('User')
     return user
+  }
+
+  /** Setup workspace after first login: create company + first registered boat */
+  static async setup(
+    prisma: PrismaClient,
+    userId: string,
+    payload: WorkspaceSetupPayload
+  ): Promise<WorkspaceResult[]> {
+    const workspaces: WorkspaceResult[] = []
+
+    if (
+      (payload.primaryRole === 'owner' || payload.primaryRole === 'both') &&
+      payload.companyName
+    ) {
+      const company = await CompanyService.create(prisma, userId, {
+        name: payload.companyName,
+      })
+      workspaces.push({
+        id: company.id,
+        type: 'company',
+        name: company.name,
+        role: 'owner',
+        permissions: [],
+      })
+
+      if (payload.firstBoatName) {
+        await CompanyService.addRegisteredBoat(prisma, userId, company.id, {
+          name: payload.firstBoatName,
+          ownerPhone: payload.boatRegistration ?? undefined,
+        })
+      }
+    }
+
+    return workspaces
   }
 }
