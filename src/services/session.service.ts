@@ -61,9 +61,10 @@ export class SessionService {
         ...(filters.boatId ? { boatId: filters.boatId } : {}),
       },
       include: {
+        company:       { select: { id: true, name: true } },
         registeredBoat: true,
-        fishEntries: true,
-        bill: { select: { id: true, status: true, finalTotal: true } },
+        fishEntries:   true,
+        bill: { select: { id: true, status: true, finalTotal: true, billNumber: true } },
       },
       orderBy: { startTime: 'desc' },
     })

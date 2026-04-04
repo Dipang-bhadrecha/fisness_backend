@@ -8,14 +8,14 @@ import {
 export async function companyRoutes(fastify: FastifyInstance) {
   const auth = { preHandler: [fastify.authenticate] }
 
-  fastify.post('/',               auth, createCompany)
-  fastify.get('/',                auth, getMyCompanies)
-  fastify.get('/:companyId',      auth, getCompany)
-  fastify.patch('/:companyId',    auth, updateCompany)
-  fastify.delete('/:companyId',   auth, deleteCompany)
+  fastify.get('/',                                                               auth, getMyCompanies)
+  fastify.post('/',                                                              auth, createCompany)
 
-  // Registered boats (boats pre-registered to arrive at this company)
-  fastify.post('/:companyId/registered-boats',  auth, addRegisteredBoat)
-  fastify.get('/:companyId/registered-boats',   auth, getRegisteredBoats)
+fastify.get<{ Params: { companyId: string } }>('/:companyId', auth, getCompany)
+fastify.patch<{ Params: { companyId: string } }>('/:companyId', auth, updateCompany)
+fastify.delete<{ Params: { companyId: string } }>('/:companyId', auth, deleteCompany)
+
+fastify.post<{ Params: { companyId: string } }>('/:companyId/registered-boats', auth, addRegisteredBoat)
+fastify.get<{ Params: { companyId: string } }>('/:companyId/registered-boats', auth, getRegisteredBoats)
 }
 

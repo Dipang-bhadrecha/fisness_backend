@@ -35,7 +35,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   // ── Security plugins ────────────────────────────────────────────────────────
   await fastify.register(helmet)
   await fastify.register(cors, {
-    origin: isDev ? '*' : false,
+    origin: '*' ,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   })
   await fastify.register(rateLimit, {
