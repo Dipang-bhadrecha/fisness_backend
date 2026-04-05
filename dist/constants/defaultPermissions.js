@@ -1,4 +1,3 @@
-"use strict";
 // // constants/defaultPermissions.ts
 // export const DEFAULT_BOAT_MANAGER_PERMISSIONS: BoatPermissionType[] = [
 //   'ADD_BOAT_EXPENSE',
@@ -19,4 +18,3 @@
 //   // VIEW_FINANCIAL_REPORT — OFF
 //   // MANAGE_EMPLOYEES      — OFF
 // ]
-//# sourceMappingURL=defaultPermissions.js.map

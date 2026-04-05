@@ -22,4 +22,3 @@ async function confirmBill(req, reply) {
     const bill = await bill_service_1.BillService.confirm(req.server.prisma, req.user.userId, req.params.billId);
     return reply.send((0, response_1.successResponse)(bill, 'Bill confirmed'));
 }
-//# sourceMappingURL=bill.controller.js.map

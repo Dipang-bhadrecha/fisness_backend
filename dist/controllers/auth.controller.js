@@ -36,4 +36,3 @@ async function setup(request, reply) {
     const workspaces = await auth_service_1.AuthService.setup(request.server.prisma, request.user.userId, request.body);
     return reply.status(200).send((0, response_1.successResponse)({ workspaces }, 'Setup complete'));
 }
-//# sourceMappingURL=auth.controller.js.map

@@ -9,4 +9,3 @@ async function billRoutes(fastify) {
     fastify.patch('/:billId/prices', auth, bill_controller_1.fillPrices);
     fastify.patch('/:billId/confirm', auth, bill_controller_1.confirmBill);
 }
-//# sourceMappingURL=bill.routes.js.map

@@ -25,4 +25,3 @@ async function jwtPlugin(fastify) {
     });
 }
 exports.default = (0, fastify_plugin_1.default)(jwtPlugin);
-//# sourceMappingURL=jwt.plugin.js.map

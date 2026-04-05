@@ -12,4 +12,3 @@ async function companyRoutes(fastify) {
     fastify.post('/:companyId/registered-boats', auth, company_controller_1.addRegisteredBoat);
     fastify.get('/:companyId/registered-boats', auth, company_controller_1.getRegisteredBoats);
 }
-//# sourceMappingURL=company.routes.js.map

@@ -8,4 +8,3 @@ async function invitationRoutes(fastify) {
     fastify.post('/accept', auth, invitation_controller_1.acceptInvitation); // manager accepts with code
     fastify.delete('/:inviteId', auth, invitation_controller_1.revokeInvitation); // owner revokes
 }
-//# sourceMappingURL=invitation.routes.js.map

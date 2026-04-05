@@ -27,4 +27,3 @@ async function syncSession(req, reply) {
     const session = await session_service_1.SessionService.sync(req.server.prisma, req.user.userId, req.params.sessionId, req.body);
     return reply.send((0, response_1.successResponse)(session, 'Session synced'));
 }
-//# sourceMappingURL=session.controller.js.map

@@ -85,4 +85,3 @@ async function buildApp() {
     fastify.register(invitation_routes_1.invitationRoutes, { prefix: '/api/v1/invitations' });
     return fastify;
 }
-//# sourceMappingURL=app.js.map

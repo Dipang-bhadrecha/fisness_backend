@@ -6,7 +6,4 @@ async function boatRoutes(fastify) {
     const auth = { preHandler: [fastify.authenticate] };
     fastify.post('/', auth, boat_controller_1.createBoat);
     fastify.get('/', auth, boat_controller_1.getMyBoats);
-    //   fastify.patch('/:boatId',    auth, updateBoat)
-    //   fastify.delete('/:boatId',   auth, deleteBoat)
 }
-//# sourceMappingURL=boat.routes.js.map

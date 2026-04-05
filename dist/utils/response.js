@@ -34,4 +34,3 @@ function paginatedResponse(data, total, page, limit) {
         timestamp: new Date().toISOString(),
     };
 }
-//# sourceMappingURL=response.js.map

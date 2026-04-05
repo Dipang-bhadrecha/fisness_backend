@@ -17,4 +17,3 @@ async function revokeInvitation(req, reply) {
     await invitation_service_1.InvitationService.revoke(req.server.prisma, req.user.userId, req.params.inviteId);
     return reply.send((0, response_1.successResponse)(null, 'Invitation revoked'));
 }
-//# sourceMappingURL=invitation.controller.js.map

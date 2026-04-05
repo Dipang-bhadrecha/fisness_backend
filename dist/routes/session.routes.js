@@ -10,4 +10,3 @@ async function sessionRoutes(fastify) {
     fastify.patch('/:sessionId/end', auth, session_controller_1.endSession); // finish tali
     fastify.post('/:sessionId/sync', auth, session_controller_1.syncSession); // offline sync push
 }
-//# sourceMappingURL=session.routes.js.map

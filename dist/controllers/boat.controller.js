@@ -22,4 +22,3 @@ async function deleteBoat(req, reply) {
     await boat_service_1.BoatService.remove(req.server.prisma, req.user.userId, req.params.boatId);
     return reply.send((0, response_1.successResponse)(null, 'Boat deleted'));
 }
-//# sourceMappingURL=boat.controller.js.map

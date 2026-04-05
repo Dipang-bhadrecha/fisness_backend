@@ -25,4 +25,3 @@ async function authRoutes(fastify) {
         preHandler: [fastify.authenticate]
     }, auth_controller_1.setup);
 }
-//# sourceMappingURL=auth.routes.js.map

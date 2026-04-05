@@ -111,4 +111,3 @@ class InvitationService {
     }
 }
 exports.InvitationService = InvitationService;
-//# sourceMappingURL=invitation.service.js.map

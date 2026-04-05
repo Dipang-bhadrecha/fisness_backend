@@ -20,4 +20,3 @@ async function prismaPlugin(fastify) {
     });
 }
 exports.default = (0, fastify_plugin_1.default)(prismaPlugin);
-//# sourceMappingURL=prisma.plugin.js.map

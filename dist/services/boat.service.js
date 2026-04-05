@@ -30,4 +30,3 @@ class BoatService {
     }
 }
 exports.BoatService = BoatService;
-//# sourceMappingURL=boat.service.js.map

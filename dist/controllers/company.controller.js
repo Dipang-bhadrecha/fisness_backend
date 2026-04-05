@@ -37,4 +37,3 @@ async function getRegisteredBoats(req, reply) {
     const boats = await company_service_1.CompanyService.getRegisteredBoats(req.server.prisma, req.user.userId, req.params.companyId);
     return reply.send((0, response_1.successResponse)(boats));
 }
-//# sourceMappingURL=company.controller.js.map
