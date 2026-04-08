@@ -14,7 +14,7 @@ export interface WorkspaceSetupPayload {
 
 export interface WorkspaceResult {
   id: string
-  type: 'company' | 'personal' | 'manager_access'
+  type: 'company' | 'personal' | 'manager_access' | 'boat'
   name: string
   role: 'owner' | 'manager'
   permissions: string[]
@@ -83,7 +83,7 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
     return user
   }
 
-  /** Setup workspace after first login: create company + first registered boat */
+  /** Setup workspace after first login: create company and/or personal boat in DB */
   static async setup(
     prisma: PrismaClient,
     userId: string,
@@ -91,8 +91,10 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
   ): Promise<WorkspaceResult[]> {
     const workspaces: WorkspaceResult[] = []
 
+    // Company owner path — create company + first registered boat
     if (
       (payload.primaryRole === 'owner' || payload.primaryRole === 'both') &&
+      payload.ownerType !== 'personal' &&
       payload.companyName
     ) {
       const company = await CompanyService.create(prisma, userId, {
@@ -112,6 +114,24 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
           ownerPhone: payload.boatRegistration ?? undefined,
         })
       }
+    }
+
+    // Personal boat owner path — create Boat record in DB
+    if (
+      (payload.primaryRole === 'owner' || payload.primaryRole === 'both') &&
+      (payload.ownerType === 'personal' || payload.ownerType === 'both') &&
+      payload.firstBoatName
+    ) {
+      const boat = await prisma.boat.create({
+        data: { name: payload.firstBoatName, ownerId: userId },
+      })
+      workspaces.push({
+        id: boat.id,
+        type: 'personal',
+        name: boat.name,
+        role: 'owner',
+        permissions: [],
+      })
     }
 
     return workspaces
