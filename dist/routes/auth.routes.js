@@ -21,6 +21,9 @@ async function authRoutes(fastify) {
     fastify.get('/me', {
         preHandler: [fastify.authenticate]
     }, auth_controller_1.getMe);
+    fastify.patch('/me', {
+        preHandler: [fastify.authenticate]
+    }, auth_controller_1.updateMe);
     fastify.post('/setup', {
         preHandler: [fastify.authenticate]
     }, auth_controller_1.setup);

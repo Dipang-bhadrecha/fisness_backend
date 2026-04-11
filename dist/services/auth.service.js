@@ -15,10 +15,13 @@ function getOTPExpiry() {
 class AuthService {
     // requestOTP — remove OTP DB logic, just call sendOTPSms(phone)
     static async requestOTP(prisma, phone) {
-        let user = await prisma.user.findUnique({ where: { phone } });
-        const isNewUser = !user;
-        if (!user)
-            user = await prisma.user.create({ data: { phone } });
+        // upsert is atomic — prevents duplicate users if called twice concurrently
+        const user = await prisma.user.upsert({
+            where: { phone },
+            update: {},
+            create: { phone },
+        });
+        const isNewUser = !user.name;
         // Twilio manages OTP — no DB record needed
         await (0, sms_service_1.sendOTPSms)(phone);
         return { isNewUser, phone };
@@ -60,10 +63,21 @@ class AuthService {
             throw new errors_1.NotFoundError('User');
         return user;
     }
-    /** Setup workspace after first login: create company + first registered boat */
+    /** Update user profile fields (name only for now) */
+    static async updateMe(prisma, userId, data) {
+        if (!data.name?.trim())
+            throw new errors_1.ValidationError('Name cannot be empty');
+        return prisma.user.update({
+            where: { id: userId },
+            data: { name: data.name.trim() },
+        });
+    }
+    /** Setup workspace after first login: create company and/or personal boat in DB */
     static async setup(prisma, userId, payload) {
         const workspaces = [];
+        // Company owner path — create company + first registered boat
         if ((payload.primaryRole === 'owner' || payload.primaryRole === 'both') &&
+            payload.ownerType !== 'personal' &&
             payload.companyName) {
             const company = await company_service_1.CompanyService.create(prisma, userId, {
                 name: payload.companyName,
@@ -81,6 +95,21 @@ class AuthService {
                     ownerPhone: payload.boatRegistration ?? undefined,
                 });
             }
+        }
+        // Personal boat owner path — create Boat record in DB
+        if ((payload.primaryRole === 'owner' || payload.primaryRole === 'both') &&
+            (payload.ownerType === 'personal' || payload.ownerType === 'both') &&
+            payload.firstBoatName) {
+            const boat = await prisma.boat.create({
+                data: { name: payload.firstBoatName, ownerId: userId },
+            });
+            workspaces.push({
+                id: boat.id,
+                type: 'personal',
+                name: boat.name,
+                role: 'owner',
+                permissions: [],
+            });
         }
         return workspaces;
     }

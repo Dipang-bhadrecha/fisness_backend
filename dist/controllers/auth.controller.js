@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.requestOTP = requestOTP;
 exports.verifyOTP = verifyOTP;
 exports.getMe = getMe;
+exports.updateMe = updateMe;
 exports.setup = setup;
 const auth_service_1 = require("../services/auth.service");
 const response_1 = require("../utils/response");
@@ -31,6 +32,14 @@ async function verifyOTP(request, reply) {
 async function getMe(request, reply) {
     const user = await auth_service_1.AuthService.getMe(request.server.prisma, request.user.userId);
     return reply.status(200).send((0, response_1.successResponse)(user));
+}
+async function updateMe(request, reply) {
+    const user = await auth_service_1.AuthService.updateMe(request.server.prisma, request.user.userId, request.body);
+    return reply.status(200).send((0, response_1.successResponse)({
+        id: user.id,
+        phone: user.phone,
+        name: user.name,
+    }, 'Profile updated'));
 }
 async function setup(request, reply) {
     const workspaces = await auth_service_1.AuthService.setup(request.server.prisma, request.user.userId, request.body);
