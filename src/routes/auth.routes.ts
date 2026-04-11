@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { requestOTP, verifyOTP, getMe, setup } from '../controllers/auth.controller'
+import { requestOTP, verifyOTP, getMe, updateMe, setup } from '../controllers/auth.controller'
 import { requestOTPSchema, verifyOTPSchema } from '../validators/auth.validator'
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -23,6 +23,10 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.get('/me', {
     preHandler: [fastify.authenticate]
   }, getMe)
+
+  fastify.patch('/me', {
+    preHandler: [fastify.authenticate]
+  }, updateMe)
 
   fastify.post('/setup', {
     preHandler: [fastify.authenticate]

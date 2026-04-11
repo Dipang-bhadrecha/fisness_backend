@@ -34,9 +34,13 @@ export class AuthService {
 
 // requestOTP — remove OTP DB logic, just call sendOTPSms(phone)
 static async requestOTP(prisma: PrismaClient, phone: string) {
-  let user = await prisma.user.findUnique({ where: { phone } })
-  const isNewUser = !user
-  if (!user) user = await prisma.user.create({ data: { phone } })
+  // upsert is atomic — prevents duplicate users if called twice concurrently
+  const user = await prisma.user.upsert({
+    where:  { phone },
+    update: {},
+    create: { phone },
+  })
+  const isNewUser = !user.name
 
   // Twilio manages OTP — no DB record needed
   await sendOTPSms(phone)
@@ -81,6 +85,19 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
 
     if (!user) throw new NotFoundError('User')
     return user
+  }
+
+  /** Update user profile fields (name only for now) */
+  static async updateMe(
+    prisma: PrismaClient,
+    userId: string,
+    data: { name?: string }
+  ) {
+    if (!data.name?.trim()) throw new ValidationError('Name cannot be empty')
+    return prisma.user.update({
+      where: { id: userId },
+      data:  { name: data.name.trim() },
+    })
   }
 
   /** Setup workspace after first login: create company and/or personal boat in DB */

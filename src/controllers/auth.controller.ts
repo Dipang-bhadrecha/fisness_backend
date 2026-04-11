@@ -62,6 +62,22 @@ export async function getMe(
   return reply.status(200).send(successResponse(user))
 }
 
+export async function updateMe(
+  request: FastifyRequest<{ Body: { name?: string } }>,
+  reply: FastifyReply
+) {
+  const user = await AuthService.updateMe(
+    request.server.prisma,
+    request.user.userId,
+    request.body
+  )
+  return reply.status(200).send(successResponse({
+    id:    user.id,
+    phone: user.phone,
+    name:  user.name,
+  }, 'Profile updated'))
+}
+
 export async function setup(
   request: FastifyRequest<{ Body: WorkspaceSetupPayload }>,
   reply: FastifyReply
