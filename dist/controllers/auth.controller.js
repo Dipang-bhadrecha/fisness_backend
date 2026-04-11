@@ -34,7 +34,8 @@ async function getMe(request, reply) {
     return reply.status(200).send((0, response_1.successResponse)(user));
 }
 async function updateMe(request, reply) {
-    const user = await auth_service_1.AuthService.updateMe(request.server.prisma, request.user.userId, request.body);
+    const { name } = request.body;
+    const user = await auth_service_1.AuthService.updateMe(request.server.prisma, request.user.userId, { name });
     return reply.status(200).send((0, response_1.successResponse)({
         id: user.id,
         phone: user.phone,

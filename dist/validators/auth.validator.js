@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyOTPSchema = exports.requestOTPSchema = void 0;
+exports.updateMeSchema = exports.verifyOTPSchema = exports.requestOTPSchema = void 0;
 exports.requestOTPSchema = {
     body: {
         type: 'object',
@@ -29,6 +29,16 @@ exports.verifyOTPSchema = {
                 minLength: 6,
                 maxLength: 6,
             },
+        },
+        additionalProperties: false,
+    },
+};
+exports.updateMeSchema = {
+    body: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+            name: { type: 'string', minLength: 2, maxLength: 50 },
         },
         additionalProperties: false,
     },

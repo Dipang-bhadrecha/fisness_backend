@@ -63,13 +63,14 @@ export async function getMe(
 }
 
 export async function updateMe(
-  request: FastifyRequest<{ Body: { name?: string } }>,
+  request: FastifyRequest,
   reply: FastifyReply
 ) {
+  const { name } = request.body as { name?: string }
   const user = await AuthService.updateMe(
     request.server.prisma,
     request.user.userId,
-    request.body
+    { name }
   )
   return reply.status(200).send(successResponse({
     id:    user.id,

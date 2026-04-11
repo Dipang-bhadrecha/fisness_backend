@@ -22,6 +22,7 @@ async function authRoutes(fastify) {
         preHandler: [fastify.authenticate]
     }, auth_controller_1.getMe);
     fastify.patch('/me', {
+        schema: auth_validator_1.updateMeSchema,
         preHandler: [fastify.authenticate]
     }, auth_controller_1.updateMe);
     fastify.post('/setup', {

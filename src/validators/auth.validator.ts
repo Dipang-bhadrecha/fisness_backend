@@ -31,3 +31,14 @@ export const verifyOTPSchema = {
     additionalProperties: false,
   },
 }
+
+export const updateMeSchema = {
+  body: {
+    type: 'object',
+    required: ['name'],
+    properties: {
+      name: { type: 'string', minLength: 2, maxLength: 50 },
+    },
+    additionalProperties: false,
+  },
+}
