@@ -20,6 +20,16 @@ class BoatService {
         await BoatService._assertOwner(prisma, userId, boatId);
         await prisma.boat.update({ where: { id: boatId }, data: { isActive: false } });
     }
+    static async getArchived(prisma, userId) {
+        return prisma.boat.findMany({
+            where: { ownerId: userId, isActive: false },
+            include: { _count: { select: { sessions: true } } },
+        });
+    }
+    static async restore(prisma, userId, boatId) {
+        await BoatService._assertOwner(prisma, userId, boatId);
+        return prisma.boat.update({ where: { id: boatId }, data: { isActive: true } });
+    }
     static async _assertOwner(prisma, userId, boatId) {
         const boat = await prisma.boat.findUnique({ where: { id: boatId } });
         if (!boat)

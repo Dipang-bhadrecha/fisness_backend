@@ -2,8 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createBoat = createBoat;
 exports.getMyBoats = getMyBoats;
+exports.getArchivedBoats = getArchivedBoats;
 exports.updateBoat = updateBoat;
 exports.deleteBoat = deleteBoat;
+exports.restoreBoat = restoreBoat;
 const boat_service_1 = require("../services/boat.service");
 const response_1 = require("../utils/response");
 async function createBoat(req, reply) {
@@ -14,6 +16,10 @@ async function getMyBoats(req, reply) {
     const boats = await boat_service_1.BoatService.getAll(req.server.prisma, req.user.userId);
     return reply.send((0, response_1.successResponse)(boats));
 }
+async function getArchivedBoats(req, reply) {
+    const boats = await boat_service_1.BoatService.getArchived(req.server.prisma, req.user.userId);
+    return reply.send((0, response_1.successResponse)(boats));
+}
 async function updateBoat(req, reply) {
     const boat = await boat_service_1.BoatService.update(req.server.prisma, req.user.userId, req.params.boatId, req.body);
     return reply.send((0, response_1.successResponse)(boat, 'Boat updated'));
@@ -21,4 +27,8 @@ async function updateBoat(req, reply) {
 async function deleteBoat(req, reply) {
     await boat_service_1.BoatService.remove(req.server.prisma, req.user.userId, req.params.boatId);
     return reply.send((0, response_1.successResponse)(null, 'Boat deleted'));
+}
+async function restoreBoat(req, reply) {
+    const boat = await boat_service_1.BoatService.restore(req.server.prisma, req.user.userId, req.params.boatId);
+    return reply.send((0, response_1.successResponse)(boat, 'Boat restored'));
 }

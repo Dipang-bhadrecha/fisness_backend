@@ -12,6 +12,11 @@ export async function getMyBoats(req: FastifyRequest, reply: FastifyReply) {
   return reply.send(successResponse(boats))
 }
 
+export async function getArchivedBoats(req: FastifyRequest, reply: FastifyReply) {
+  const boats = await BoatService.getArchived(req.server.prisma, req.user.userId)
+  return reply.send(successResponse(boats))
+}
+
 export async function updateBoat(
   req: FastifyRequest<{ Params: { boatId: string } }>,
   reply: FastifyReply
@@ -26,4 +31,12 @@ export async function deleteBoat(
 ) {
   await BoatService.remove(req.server.prisma, req.user.userId, req.params.boatId)
   return reply.send(successResponse(null, 'Boat deleted'))
+}
+
+export async function restoreBoat(
+  req: FastifyRequest<{ Params: { boatId: string } }>,
+  reply: FastifyReply
+) {
+  const boat = await BoatService.restore(req.server.prisma, req.user.userId, req.params.boatId)
+  return reply.send(successResponse(boat, 'Boat restored'))
 }
