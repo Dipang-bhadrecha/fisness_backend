@@ -36,5 +36,5 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.patch('/me/role', {
     schema:     updateOwnerTypeSchema,
     preHandler: [fastify.authenticate]
-  }, updateOwnerType)
+  }, updateOwnerType as any)
 }
