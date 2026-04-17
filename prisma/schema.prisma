@@ -12,13 +12,22 @@ datasource db {
 
 // They switch contexts inside the app — no re-login needed.
 
+// null = manager only (role assigned by owner via invitation)
+// non-null = self-selected owner — can be edited from profile
+enum OwnerType {
+  BOAT      // owns boats only
+  COMPANY   // owns a company only
+  BOTH      // owns boats + a company
+}
+
 model User {
-  id        String   @id @default(uuid())
-  phone     String   @unique
+  id        String     @id @default(uuid())
+  phone     String     @unique
   name      String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ownerType OwnerType?
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   ownedBoats         Boat[]              @relation("BoatOwner")
   ownedCompanies     Company[]           @relation("CompanyOwner")

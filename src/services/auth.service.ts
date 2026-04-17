@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, OwnerType } from '@prisma/client'
 import { sendOTPSms, verifyOTPSms } from './sms.service'
 import { CompanyService } from './company.service'
 import { ValidationError, NotFoundError } from '../utils/errors'
@@ -52,9 +52,29 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
   const approved = await verifyOTPSms(phone, code)
   if (!approved) throw new ValidationError('Invalid or expired OTP code. Please check the code or request a new one.')
 
-  const user = await prisma.user.findUnique({ where: { phone } })
+  const user = await prisma.user.findUnique({
+    where:   { phone },
+    include: {
+      ownedBoats:     { where: { isActive: true }, select: { id: true } },
+      ownedCompanies: { where: { isActive: true }, select: { id: true } },
+    },
+  })
   if (!user) throw new NotFoundError('User')
   if (!user.isActive) throw new ValidationError('Account is disabled')
+
+  // Backfill ownerType for users created before this field existed
+  if (!user.ownerType) {
+    const hasBoats     = user.ownedBoats.length > 0
+    const hasCompanies = user.ownedCompanies.length > 0
+    if (hasBoats || hasCompanies) {
+      const derived = hasBoats && hasCompanies ? OwnerType.BOTH
+                    : hasBoats                 ? OwnerType.BOAT
+                    :                            OwnerType.COMPANY
+      await prisma.user.update({ where: { id: user.id }, data: { ownerType: derived } })
+      return { ...user, ownerType: derived }
+    }
+  }
+
   return user
 }
 
@@ -84,6 +104,20 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
     })
 
     if (!user) throw new NotFoundError('User')
+
+    // Backfill ownerType for users created before this field existed
+    if (!user.ownerType) {
+      const hasBoats     = user.ownedBoats.length > 0
+      const hasCompanies = user.ownedCompanies.length > 0
+      if (hasBoats || hasCompanies) {
+        const derived = hasBoats && hasCompanies ? OwnerType.BOTH
+                      : hasBoats                 ? OwnerType.BOAT
+                      :                            OwnerType.COMPANY
+        await prisma.user.update({ where: { id: user.id }, data: { ownerType: derived } })
+        return { ...user, ownerType: derived }
+      }
+    }
+
     return user
   }
 
@@ -95,8 +129,9 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
   ) {
     if (!data.name?.trim()) throw new ValidationError('Name cannot be empty')
     return prisma.user.update({
-      where: { id: userId },
-      data:  { name: data.name.trim() },
+      where:  { id: userId },
+      data:   { name: data.name.trim() },
+      select: { id: true, phone: true, name: true, ownerType: true },
     })
   }
 
@@ -107,6 +142,24 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
     payload: WorkspaceSetupPayload
   ): Promise<WorkspaceResult[]> {
     const workspaces: WorkspaceResult[] = []
+
+    // Derive and persist ownerType from setup payload
+    const ownerTypeMap: Record<string, OwnerType> = {
+      personal: OwnerType.BOAT,
+      company:  OwnerType.COMPANY,
+      both:     OwnerType.BOTH,
+    }
+    const resolvedOwnerType =
+      (payload.primaryRole === 'owner' || payload.primaryRole === 'both') && payload.ownerType
+        ? ownerTypeMap[payload.ownerType] ?? null
+        : null
+
+    if (resolvedOwnerType) {
+      await prisma.user.update({
+        where: { id: userId },
+        data:  { ownerType: resolvedOwnerType },
+      })
+    }
 
     // Company owner path — create company + first registered boat
     if (
@@ -152,5 +205,53 @@ static async verifyOTP(prisma: PrismaClient, phone: string, code: string) {
     }
 
     return workspaces
+  }
+
+  /**
+   * Owners can expand their ownerType from profile (e.g. BOAT → BOTH).
+   * Managers (ownerType = null) cannot call this — enforced in controller.
+   * When adding COMPANY role, creates the company entity.
+   * When adding BOAT role, creates the first boat entity.
+   */
+  static async updateOwnerType(
+    prisma: PrismaClient,
+    userId: string,
+    payload: { ownerType: 'company' | 'personal' | 'both'; companyName?: string; firstBoatName?: string }
+  ) {
+    const ownerTypeMap: Record<string, OwnerType> = {
+      personal: OwnerType.BOAT,
+      company:  OwnerType.COMPANY,
+      both:     OwnerType.BOTH,
+    }
+
+    const newOwnerType = ownerTypeMap[payload.ownerType]
+
+    // Create company entity if transitioning to include COMPANY
+    if (
+      (payload.ownerType === 'company' || payload.ownerType === 'both') &&
+      payload.companyName
+    ) {
+      const existing = await prisma.company.findFirst({ where: { ownerId: userId, isActive: true } })
+      if (!existing) {
+        await CompanyService.create(prisma, userId, { name: payload.companyName })
+      }
+    }
+
+    // Create boat entity if transitioning to include BOAT
+    if (
+      (payload.ownerType === 'personal' || payload.ownerType === 'both') &&
+      payload.firstBoatName
+    ) {
+      const existing = await prisma.boat.findFirst({ where: { ownerId: userId, isActive: true } })
+      if (!existing) {
+        await prisma.boat.create({ data: { name: payload.firstBoatName, ownerId: userId } })
+      }
+    }
+
+    return prisma.user.update({
+      where: { id: userId },
+      data:  { ownerType: newOwnerType },
+      select: { id: true, phone: true, name: true, ownerType: true, createdAt: true },
+    })
   }
 }

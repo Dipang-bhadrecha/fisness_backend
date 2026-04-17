@@ -42,3 +42,16 @@ export const updateMeSchema = {
     additionalProperties: false,
   },
 }
+
+export const updateOwnerTypeSchema = {
+  body: {
+    type: 'object',
+    required: ['ownerType'],
+    properties: {
+      ownerType:     { type: 'string', enum: ['company', 'personal', 'both'] },
+      companyName:   { type: 'string', minLength: 2, maxLength: 100 },
+      firstBoatName: { type: 'string', minLength: 2, maxLength: 100 },
+    },
+    additionalProperties: false,
+  },
+}

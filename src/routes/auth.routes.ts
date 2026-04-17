@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
-import { requestOTP, verifyOTP, getMe, updateMe, setup } from '../controllers/auth.controller'
-import { requestOTPSchema, verifyOTPSchema, updateMeSchema } from '../validators/auth.validator'
+import { requestOTP, verifyOTP, getMe, updateMe, setup, updateOwnerType } from '../controllers/auth.controller'
+import { requestOTPSchema, verifyOTPSchema, updateMeSchema, updateOwnerTypeSchema } from '../validators/auth.validator'
 
 export async function authRoutes(fastify: FastifyInstance) {
 
@@ -32,4 +32,9 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.post('/setup', {
     preHandler: [fastify.authenticate]
   }, setup)
+
+  fastify.patch('/me/role', {
+    schema:     updateOwnerTypeSchema,
+    preHandler: [fastify.authenticate]
+  }, updateOwnerType)
 }
