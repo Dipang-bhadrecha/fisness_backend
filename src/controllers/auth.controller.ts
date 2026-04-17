@@ -113,11 +113,18 @@ export async function updateOwnerType(
   }
 
   const { ownerType, companyName, firstBoatName } = request.body
-  if ((ownerType === 'company' || ownerType === 'both') && !companyName) {
-    throw new ValidationError('companyName is required when adding company owner role')
+
+  // Only validate what the user is actually adding based on their current role.
+  // A BOAT owner adding company → only needs companyName (already has a boat).
+  // A COMPANY owner adding boat → only needs firstBoatName (already has a company).
+  const addingCompany = current.ownerType === 'BOAT'    // BOAT → BOTH
+  const addingBoat    = current.ownerType === 'COMPANY' // COMPANY → BOTH
+
+  if (addingCompany && !companyName) {
+    throw new ValidationError('Company name is required')
   }
-  if ((ownerType === 'personal' || ownerType === 'both') && !firstBoatName) {
-    throw new ValidationError('firstBoatName is required when adding boat owner role')
+  if (addingBoat && !firstBoatName) {
+    throw new ValidationError('Boat name is required')
   }
 
   const user = await AuthService.updateOwnerType(
