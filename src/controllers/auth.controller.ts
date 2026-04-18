@@ -114,18 +114,17 @@ export async function updateOwnerType(
 
   const { ownerType, companyName, firstBoatName } = request.body
 
-  // Only validate what the user is actually adding based on their current role.
-  // A BOAT owner adding company → only needs companyName (already has a boat).
-  // A COMPANY owner adding boat → only needs firstBoatName (already has a company).
-  const addingCompany = current.ownerType === 'BOAT'    // BOAT → BOTH
-  const addingBoat    = current.ownerType === 'COMPANY' // COMPANY → BOTH
+  const isAdding   = current.ownerType !== 'BOTH'  // BOAT→BOTH or COMPANY→BOTH
+  const isRemoving = current.ownerType === 'BOTH'   // BOTH→BOAT or BOTH→COMPANY
 
-  if (addingCompany && !companyName) {
-    throw new ValidationError('Company name is required')
+  // Only require names when adding a new role, not when removing one
+  if (isAdding) {
+    const addingCompany = current.ownerType === 'BOAT'
+    const addingBoat    = current.ownerType === 'COMPANY'
+    if (addingCompany && !companyName)   throw new ValidationError('Company name is required')
+    if (addingBoat    && !firstBoatName) throw new ValidationError('Boat name is required')
   }
-  if (addingBoat && !firstBoatName) {
-    throw new ValidationError('Boat name is required')
-  }
+  // Removing: just update ownerType, no name needed, data stays intact
 
   const user = await AuthService.updateOwnerType(
     request.server.prisma,
