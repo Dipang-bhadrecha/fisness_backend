@@ -11,6 +11,7 @@ import { boatRoutes }       from './routes/boat.routes'
 import { sessionRoutes }    from './routes/session.routes'
 import { billRoutes }       from './routes/bill.routes'
 import { invitationRoutes } from './routes/invitation.routes'
+import { crewRoutes }       from './routes/crew.routes'
 import { errorResponse }    from './utils/response'
 import { AppError }         from './utils/errors'
 import { verifySmsService } from './services/sms.service'
@@ -100,6 +101,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   fastify.register(sessionRoutes,    { prefix: '/api/v1/sessions' })
   fastify.register(billRoutes,       { prefix: '/api/v1/bills' })
   fastify.register(invitationRoutes, { prefix: '/api/v1/invitations' })
+  fastify.register(crewRoutes,       { prefix: '/api/v1' })
 
   return fastify
 }

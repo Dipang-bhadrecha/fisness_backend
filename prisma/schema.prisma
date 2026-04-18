@@ -178,6 +178,9 @@ model Boat {
   // Managers assigned to this boat by the owner
   assignments        BoatAssignment[]
 
+  // Crew members on this boat
+  crew               CrewMember[]
+
   // Expenses recorded for this boat
   expenses           BoatExpense[]
 
@@ -275,6 +278,51 @@ model RegisteredBoat {
 
   @@unique([companyId, name])
   @@map("registered_boats")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CREW
+// Crew members belong to a boat. Owner manages them.
+// Advances (kharchi/upad) tracked per member.
+// ═══════════════════════════════════════════════════════════════════
+
+enum CrewStatus {
+  active
+  left
+}
+
+model CrewMember {
+  id            String      @id @default(uuid())
+  boatId        String
+  name          String
+  role          String      // Pilot / Captain | Khalasi | Bhandari
+  phone         String?
+  aadhaarNumber String?
+  joiningDate   DateTime?
+  monthlyPagar  Float?
+  seasonAdvance Float?
+  status        CrewStatus  @default(active)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  boat          Boat        @relation(fields: [boatId], references: [id], onDelete: Cascade)
+  advances      CrewAdvance[]
+
+  @@map("crew_members")
+}
+
+model CrewAdvance {
+  id           String   @id @default(uuid())
+  crewMemberId String
+  amount       Float
+  reason       String?
+  givenBy      String?
+  date         DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  crewMember   CrewMember @relation(fields: [crewMemberId], references: [id], onDelete: Cascade)
+
+  @@map("crew_advances")
 }
 
 // ═══════════════════════════════════════════════════════════════════
