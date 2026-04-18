@@ -133,4 +133,24 @@ export class CrewService {
       },
     })
   }
+
+  static async deleteCrewAdvance(prisma: PrismaClient, advanceId: string, userId: string) {
+    const advance = await prisma.crewAdvance.findUnique({
+      where:   { id: advanceId },
+      include: { crewMember: { include: { boat: { select: { ownerId: true } } } } },
+    })
+    if (!advance) throw new NotFoundError('Advance entry')
+    if (advance.crewMember.boat.ownerId !== userId) throw new ForbiddenError('You do not own this boat')
+    await prisma.crewAdvance.delete({ where: { id: advanceId } })
+  }
+
+  static async deleteCrewMember(prisma: PrismaClient, memberId: string, userId: string) {
+    const member = await prisma.crewMember.findUnique({
+      where:   { id: memberId },
+      include: { boat: { select: { ownerId: true } } },
+    })
+    if (!member) throw new NotFoundError('Crew member')
+    if (member.boat.ownerId !== userId) throw new ForbiddenError('You do not own this boat')
+    await prisma.crewMember.delete({ where: { id: memberId } })
+  }
 }

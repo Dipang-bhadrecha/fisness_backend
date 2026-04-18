@@ -2,6 +2,30 @@ import { FastifyRequest, FastifyReply } from 'fastify'
 import { CrewService, AddCrewPayload, AddCrewAdvancePayload } from '../services/crew.service'
 import { successResponse } from '../utils/response'
 
+export async function deleteCrewAdvance(
+  request: FastifyRequest<{ Params: { advanceId: string } }>,
+  reply: FastifyReply
+) {
+  await CrewService.deleteCrewAdvance(
+    request.server.prisma,
+    request.params.advanceId,
+    request.user.userId
+  )
+  return reply.send(successResponse(null, 'Advance deleted'))
+}
+
+export async function deleteCrewMember(
+  request: FastifyRequest<{ Params: { memberId: string } }>,
+  reply: FastifyReply
+) {
+  await CrewService.deleteCrewMember(
+    request.server.prisma,
+    request.params.memberId,
+    request.user.userId
+  )
+  return reply.send(successResponse(null, 'Crew member deleted'))
+}
+
 export async function getCrewMembers(
   request: FastifyRequest<{ Params: { boatId: string } }>,
   reply: FastifyReply

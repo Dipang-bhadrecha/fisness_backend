@@ -3,6 +3,7 @@ import {
   getCrewMembers, addCrewMember,
   getCrewMemberDetail, updateCrewMember,
   getCrewAdvances, addCrewAdvance,
+  deleteCrewAdvance, deleteCrewMember,
 } from '../controllers/crew.controller'
 
 export async function crewRoutes(fastify: FastifyInstance) {
@@ -15,6 +16,8 @@ export async function crewRoutes(fastify: FastifyInstance) {
   // Per-member
   fastify.get  ('/crew/:memberId',          auth, getCrewMemberDetail as any)
   fastify.patch('/crew/:memberId',          auth, updateCrewMember    as any)
-  fastify.get  ('/crew/:memberId/advances', auth, getCrewAdvances     as any)
-  fastify.post ('/crew/:memberId/advances', auth, addCrewAdvance      as any)
+  fastify.get   ('/crew/:memberId/advances', auth, getCrewAdvances     as any)
+  fastify.post  ('/crew/:memberId/advances',           auth, addCrewAdvance    as any)
+  fastify.delete('/crew/advances/:advanceId',           auth, deleteCrewAdvance as any)
+  fastify.delete('/crew/:memberId',                    auth, deleteCrewMember  as any)
 }
