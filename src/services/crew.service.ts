@@ -18,6 +18,12 @@ export interface AddCrewAdvancePayload {
   date?: string
 }
 
+export interface AddCrewLeavePayload {
+  startDate: string
+  endDate?: string
+  note?: string
+}
+
 export class CrewService {
 
   // Verify the requesting user owns this boat
@@ -132,6 +138,69 @@ export class CrewService {
         date:         payload.date    ? new Date(payload.date) : new Date(),
       },
     })
+  }
+
+  static async getCrewLeaves(prisma: PrismaClient, memberId: string, userId: string) {
+    const member = await prisma.crewMember.findUnique({
+      where:   { id: memberId },
+      include: { boat: { select: { ownerId: true } } },
+    })
+    if (!member) throw new NotFoundError('Crew member')
+    if (member.boat.ownerId !== userId) throw new ForbiddenError('You do not own this boat')
+    return prisma.crewLeave.findMany({
+      where:   { crewMemberId: memberId },
+      orderBy: { startDate: 'desc' },
+    })
+  }
+
+  static async createCrewLeave(prisma: PrismaClient, memberId: string, userId: string, payload: AddCrewLeavePayload) {
+    const member = await prisma.crewMember.findUnique({
+      where:   { id: memberId },
+      include: { boat: { select: { ownerId: true } } },
+    })
+    if (!member) throw new NotFoundError('Crew member')
+    if (member.boat.ownerId !== userId) throw new ForbiddenError('You do not own this boat')
+    if (!payload.startDate) throw new ValidationError('Start date is required')
+
+    const start = new Date(payload.startDate)
+    const end   = payload.endDate ? new Date(payload.endDate) : null
+
+    if (end && end <= start) throw new ValidationError('End date must be after start date')
+
+    // If open-ended (marking on leave), ensure no other open leave exists
+    if (!end) {
+      const existing = await prisma.crewLeave.findFirst({ where: { crewMemberId: memberId, endDate: null } })
+      if (existing) throw new ValidationError('Crew member is already marked on leave')
+    }
+
+    return prisma.crewLeave.create({
+      data: { crewMemberId: memberId, startDate: start, endDate: end, note: payload.note ?? null },
+    })
+  }
+
+  static async closeCrewLeave(prisma: PrismaClient, leaveId: string, userId: string, endDate?: string) {
+    const leave = await prisma.crewLeave.findUnique({
+      where:   { id: leaveId },
+      include: { crewMember: { include: { boat: { select: { ownerId: true } } } } },
+    })
+    if (!leave) throw new NotFoundError('Leave entry')
+    if (leave.crewMember.boat.ownerId !== userId) throw new ForbiddenError('You do not own this boat')
+    if (leave.endDate) throw new ValidationError('Leave is already closed')
+
+    const end = endDate ? new Date(endDate) : new Date()
+    if (end <= leave.startDate) throw new ValidationError('End date must be after start date')
+
+    return prisma.crewLeave.update({ where: { id: leaveId }, data: { endDate: end } })
+  }
+
+  static async deleteCrewLeave(prisma: PrismaClient, leaveId: string, userId: string) {
+    const leave = await prisma.crewLeave.findUnique({
+      where:   { id: leaveId },
+      include: { crewMember: { include: { boat: { select: { ownerId: true } } } } },
+    })
+    if (!leave) throw new NotFoundError('Leave entry')
+    if (leave.crewMember.boat.ownerId !== userId) throw new ForbiddenError('You do not own this boat')
+    await prisma.crewLeave.delete({ where: { id: leaveId } })
   }
 
   static async deleteCrewAdvance(prisma: PrismaClient, advanceId: string, userId: string) {

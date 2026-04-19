@@ -1,6 +1,38 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { CrewService, AddCrewPayload, AddCrewAdvancePayload } from '../services/crew.service'
+import { CrewService, AddCrewPayload, AddCrewAdvancePayload, AddCrewLeavePayload } from '../services/crew.service'
 import { successResponse } from '../utils/response'
+
+export async function getCrewLeaves(
+  request: FastifyRequest<{ Params: { memberId: string } }>,
+  reply: FastifyReply
+) {
+  const leaves = await CrewService.getCrewLeaves(request.server.prisma, request.params.memberId, request.user.userId)
+  return reply.send(successResponse(leaves))
+}
+
+export async function createCrewLeave(
+  request: FastifyRequest<{ Params: { memberId: string }; Body: AddCrewLeavePayload }>,
+  reply: FastifyReply
+) {
+  const leave = await CrewService.createCrewLeave(request.server.prisma, request.params.memberId, request.user.userId, request.body)
+  return reply.status(201).send(successResponse(leave, 'Leave recorded'))
+}
+
+export async function closeCrewLeave(
+  request: FastifyRequest<{ Params: { leaveId: string }; Body: { endDate?: string } }>,
+  reply: FastifyReply
+) {
+  const leave = await CrewService.closeCrewLeave(request.server.prisma, request.params.leaveId, request.user.userId, request.body?.endDate)
+  return reply.send(successResponse(leave, 'Marked back on boat'))
+}
+
+export async function deleteCrewLeave(
+  request: FastifyRequest<{ Params: { leaveId: string } }>,
+  reply: FastifyReply
+) {
+  await CrewService.deleteCrewLeave(request.server.prisma, request.params.leaveId, request.user.userId)
+  return reply.send(successResponse(null, 'Leave entry deleted'))
+}
 
 export async function deleteCrewAdvance(
   request: FastifyRequest<{ Params: { advanceId: string } }>,
